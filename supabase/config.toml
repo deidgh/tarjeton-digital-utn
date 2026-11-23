@@ -1,0 +1,7 @@
+project_id = "tarjeton-digital-utn"
+
+[functions.permit-qr]
+verify_jwt = false
+
+[functions.admin-invite]
+verify_jwt = false

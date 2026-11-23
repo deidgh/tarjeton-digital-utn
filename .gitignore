@@ -1,0 +1,8 @@
+# Nunca compartir credenciales de servidor ni datos privados.
+.env
+.env.*
+node_modules/
+.DS_Store
+*.log
+*.zip
+dist/

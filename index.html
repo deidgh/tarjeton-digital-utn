@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#075643">
+  <meta name="description" content="Prototipo académico: tarjetón digital y verificación de estacionamiento de la UTN.">
+  <title>Tarjetón Digital | UTN</title>
+  <link rel="icon" href="./assets/logo-small.png">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="apple-touch-icon" href="./assets/icon-192.png">
+  <link rel="stylesheet" href="./styles.css">
+  <script defer src="./vendor/qr.js"></script>
+  <script defer src="./vendor/dependencies.js"></script>
+  <script defer src="./config.js"></script>
+  <script defer src="./app.js"></script>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="site-header">
+      <a href="#/inicio" class="school-brand" aria-label="Inicio del sistema">
+        <img src="./assets/logo-small.png" alt="Emblema de la Universidad Tecnológica de Nezahualcóyotl">
+        <span><strong>Tarjetón Digital</strong><small>Universidad Tecnológica de Nezahualcóyotl</small></span>
+      </a>
+      <div class="header-actions"><span class="demo-badge" id="modeBadge">PROTOTIPO ACADÉMICO</span><button class="outline-btn" id="installBtn" type="button">Instalar aplicación</button></div>
+    </header>
+    <div class="identity-rule"><span></span><span></span><span></span></div>
+    <main id="root" aria-live="polite"><div class="loading"><div class="spinner"></div><p>Preparando el sistema...</p></div></main>
+    <footer class="site-footer"><span>Proyecto académico · No es un sistema oficial de la UTN</span><span>Control de estacionamiento · Tarjetón digital</span></footer>
+  </div>
+  <dialog id="installGuide" class="panel"><h2>Instalar Tarjetón UTN</h2><p>En Android, abre el menú de Chrome y elige Instalar aplicación o Agregar a pantalla principal.</p><p>En iPhone, abre Safari, toca Compartir y elige Agregar a inicio.</p><p>En computadora, usa el icono de instalación en la barra de direcciones de Chrome o Edge.</p><form method="dialog"><button class="outline-btn">Cerrar</button></form></dialog>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+</body>
+</html>

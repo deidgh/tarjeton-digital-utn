@@ -1,0 +1,17 @@
+{
+  "name": "tarjeton-digital-utn",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+    "build": "node build.mjs"
+  },
+  "type": "commonjs",
+  "dependencies": {
+    "@supabase/supabase-js": "2.57.2",
+    "jsqr": "1.4.0"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.2"
+  },
+  "private": true
+}
