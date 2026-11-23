@@ -113,7 +113,7 @@ function showPasswordRecoveryRequest(){
  if(!api){notify('Servicio de recuperación no disponible.');return}
  put(`<section class="panel login-panel">
   <div class="eyebrow">RECUPERACIÓN DE ACCESO</div><h1>Restablecer contraseña</h1>
-  <p>Recibe un enlace de seguridad para establecer una nueva contraseña, sin entrar al panel de Supabase.</p>
+  <p>Recibe un enlace de seguridad para establecer una nueva contraseña, sin abrir otras páginas de configuración.</p>
   <form id="requestRecovery">
    <div class="field"><label class="label" for="recoveryEmail">Correo de tu cuenta</label>
     <input id="recoveryEmail" type="email" required autocomplete="email" placeholder="correo@ejemplo.com"></div>
@@ -640,7 +640,7 @@ async function submitNew(event){
  }catch(error){status.textContent=error.message;}
  finally{button.disabled=false;}
 }
-async function renderRoute(){state.route++;cleanup();footerStatus();if(live&&!api){put('<section class="panel login-panel"><div class="eyebrow">SIN CONEXIÓN</div><h2>No se pudo cargar Supabase</h2><p>Comprueba tu conexión a internet, la URL y la clave publicable de <code>config.js</code>. No se mostrarán datos de demostración como si fueran reales.</p><a class="outline-btn" href="./">Reintentar</a></section>');return}let hash;try{hash=decodeURIComponent(location.hash||'#/inicio')}catch{hash='#/inicio'};const role=sessionRole();if(hash.startsWith('#/verificar/')&&(api||demo)){const token=hash.slice('#/verificar/'.length).split('/')[0];await verificationPage(token);return}if(hash==='#/verificar'){if(role==='guard'||role==='admin'){await guardPanel()}else if(api){showLogin('guard')}else{home()}return}if(hash==='#/ingresar'){showLogin();return}if(hash==='#/panel'){if(!role){home();return}if(role==='student'){await studentPanel();return}if(role==='guard'){await guardPanel();return}if(role==='admin'){await adminPanel();return}}home()}
+async function renderRoute(){state.route++;cleanup();footerStatus();if(live&&!api){put('<section class="panel login-panel"><div class="eyebrow">SIN CONEXIÓN</div><h2>No se pudo conectar al sistema</h2><p>Verifica tu conexión a internet y vuelve a intentarlo.</p><a class="outline-btn" href="./">Reintentar</a></section>');return}let hash;try{hash=decodeURIComponent(location.hash||'#/inicio')}catch{hash='#/inicio'};const role=sessionRole();if(hash.startsWith('#/verificar/')&&(api||demo)){const token=hash.slice('#/verificar/'.length).split('/')[0];await verificationPage(token);return}if(hash==='#/verificar'){if(role==='guard'||role==='admin'){await guardPanel()}else if(api){showLogin('guard')}else{home()}return}if(hash==='#/ingresar'){showLogin();return}if(hash==='#/panel'){if(!role){home();return}if(role==='student'){await studentPanel();return}if(role==='guard'){await guardPanel();return}if(role==='admin'){await adminPanel();return}}home()}
 let installPrompt=null;
 const installButton=$('#installBtn');
 installButton.onclick=async()=>{
