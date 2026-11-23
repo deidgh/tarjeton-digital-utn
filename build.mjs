@@ -4,6 +4,7 @@ import { build } from 'esbuild';
 const url = process.env.UTN_DEMO === 'true' ? '' : (process.env.SUPABASE_URL || 'https://fmemnxhzlqsmwhfynqfm.supabase.co');
 const key = process.env.UTN_DEMO === 'true' ? '' : (process.env.SUPABASE_PUBLISHABLE_KEY || 'sb_publishable_bmrq6_j8Fmv6vc8X9QkbIA_77hyIvJe');
 const demo = process.env.UTN_DEMO === 'true';
+if (url && url !== 'https://fmemnxhzlqsmwhfynqfm.supabase.co') throw new Error('Solo se permite el proyecto Supabase dedicado al Tarjetón UTN.');
 if (Boolean(url) !== Boolean(key)) throw new Error('Configura las dos variables públicas de Supabase.');
 if (key && !key.startsWith('sb_publishable_')) throw new Error('Usa la clave publicable de Supabase.');
 if (url && !/^https:\/\/[a-z0-9-]+\.supabase\.co\/?$/.test(url)) throw new Error('URL de Supabase inválida.');
