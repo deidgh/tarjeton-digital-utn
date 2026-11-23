@@ -24,7 +24,7 @@ function spinner(){put('<div class="loading"><div class="spinner"></div><p>Consu
 function stopQr(){if(state.qrTick){clearInterval(state.qrTick);state.qrTick=null}state.qr=null;state.tokenIssuedAt=0;state.qrRetryAt=0;state.qrRequest=null}
 function stopScan(){if(state.scanFrame){cancelAnimationFrame(state.scanFrame);state.scanFrame=null}if(state.scanner){state.scanner.getTracks().forEach(t=>t.stop());state.scanner=null}}
 function cleanup(){stopQr();stopScan()}
-function footerStatus(){const b=$('#modeBadge');b.classList.toggle('live',!!api);b.textContent=api?'CONECTADO A SUPABASE':live?'SIN CONEXIÓN A SUPABASE':demo?'MODO DEMOSTRACIÓN':'SERVICIO SIN CONFIGURAR'}
+function footerStatus(){const b=$('#modeBadge');if(b)b.hidden=true}
 function bird(){return `<svg class="bird" viewBox="0 0 140 140" aria-hidden="true"><path fill="#e3c393" d="M36 24 69 36l54-29-29 48 17 15-39 18-17 42-18-31L6 73l44 6-14-55Zm30 39-13 14 15 20 12-30-14-4Z"/><circle cx="78" cy="55" r="5" fill="#fff4e4"/></svg>`}
 function cardMarkup(p,compact=false){const s=statusOf(p);return `<article class="permit-card" aria-label="Tarjetón de estacionamiento: ${clean(p.folio)}">
  <div class="card-top"><div class="card-logo"><img src="./assets/logo-small.png" alt="Escudo UTN"><strong>UNIVERSIDAD TECNOLÓGICA<br>DE NEZAHUALCÓYOTL</strong></div><span>ESTACIONAMIENTO</span></div>
@@ -40,7 +40,7 @@ function cardMarkup(p,compact=false){const s=statusOf(p);return `<article class=
 function sessionRole(){return state.demoRole||(state.profile?.active?state.profile.role:null)}
 function logged(){return !!sessionRole()}
 function roleName(role){return {student:'Titular',guard:'Vigilancia',admin:'Administración'}[role]||'Usuario'}
-function sessionHeading(title,desc){return `<div class="dashboard-top"><div><div class="eyebrow">PLATAFORMA ACADÉMICA · ${clean(roleName(sessionRole()))}</div><h1>${clean(title)}</h1><p>${clean(desc)}</p></div><div class="dashboard-actions"><button id="homeBtn" class="outline-btn">Inicio</button><button id="signOut" class="soft-btn">Cerrar sesión</button></div></div>`}
+function sessionHeading(title,desc){return `<div class="dashboard-top"><div><div class="eyebrow">SISTEMA DE ESTACIONAMIENTO · ${clean(roleName(sessionRole()))}</div><h1>${clean(title)}</h1><p>${clean(desc)}</p></div><div class="dashboard-actions"><button id="homeBtn" class="outline-btn">Inicio</button><button id="signOut" class="soft-btn">Cerrar sesión</button></div></div>`}
 function wireSession(){const so=$('#signOut');if(so)so.onclick=signOut;const h=$('#homeBtn');if(h)h.onclick=()=>{location.hash='#/inicio';renderRoute()}}
 // La pantalla de selección es SIEMPRE la portada; la URL de verificación QR es una excepción.
 const entryRoles=[
@@ -49,9 +49,9 @@ const entryRoles=[
  {id:'admin',symbol:'⚙️',title:'Soy administrador',subtitle:'Registrar personas, vehículos y controlar accesos',action:'Administrar el sistema'}
 ];
 function home(){
- put(`<section class="entry-shell" aria-labelledby="entry-title"><div class="entry-heading"><img class="entry-logo" src="./assets/logo-utn.png" alt="Escudo de la Universidad Tecnológica de Nezahualcóyotl"><div class="eyebrow">UNIVERSIDAD TECNOLÓGICA DE NEZAHUALCÓYOTL</div><h1 id="entry-title">Bienvenido al sistema de estacionamiento</h1><p>Selecciona cómo vas a utilizar el tarjetón digital.</p><div class="entry-caption">ACCESO INSTITUCIONAL · PROTOTIPO ACADÉMICO</div></div>
+ put(`<section class="entry-shell" aria-labelledby="entry-title"><div class="entry-heading"><img class="entry-logo" src="./assets/logo-utn.png" alt="Escudo de la Universidad Tecnológica de Nezahualcóyotl"><div class="eyebrow">UNIVERSIDAD TECNOLÓGICA DE NEZAHUALCÓYOTL</div><h1 id="entry-title">Bienvenido al sistema de estacionamiento</h1><p>Selecciona cómo vas a utilizar el tarjetón digital.</p><div class="entry-caption">CONTROL DE ESTACIONAMIENTO · TARJETÓN DIGITAL</div></div>
  <div class="entry-role-grid">${entryRoles.map(r=>`<button type="button" class="entry-role" data-pick-role="${r.id}"><span class="entry-role-symbol" aria-hidden="true">${r.symbol}</span><span class="entry-role-copy"><strong>${clean(r.title)}</strong><small>${clean(r.subtitle)}</small><span class="entry-role-action">${clean(r.action)} <span aria-hidden="true">→</span></span></span></button>`).join('')}</div>
- <p class="entry-notice">${live?'El acceso a cada perfil se valida con una cuenta autorizada.':demo?'Estás explorando una demostración. Los perfiles y tarjetones son ficticios.':'El servicio de inicio de sesión está pendiente de configuración.'}</p>
+ <p class="entry-notice">${live?'Accede con tu cuenta y presenta un tarjetón vigente al personal de vigilancia.':demo?'Entorno de prueba con registros ficticios.':'El acceso requiere configuración.'}</p>
  ${api&&state.user?'<div class="entry-existing">Hay una sesión iniciada. Si necesitas utilizar otra cuenta, <button type="button" class="link-button" id="entrySignOut">cierra la sesión</button>.</div>':''}
  </section>`);
  document.querySelectorAll('[data-pick-role]').forEach(b=>b.addEventListener('click',()=>chooseRole(b.dataset.pickRole)));
@@ -81,37 +81,82 @@ function loginForm(inline=false,role=state.selectedRole){
 function showLogin(role=state.selectedRole){
  if(!entryRoles.some(r=>r.id===role)){home();return}
  state.selectedRole=role;
- const heading=`<div class="page-heading login-heading"><div class="eyebrow">IDENTIFICACIÓN DE USUARIO</div><h1>Inicio de sesión</h1><p>El acceso está limitado a personas autorizadas por la universidad.</p></div>`;
+ const heading=`<div class="page-heading login-heading"><div class="eyebrow">IDENTIFICACIÓN DE USUARIO</div><h1>Inicio de sesión</h1><p>El acceso está reservado a cuentas autorizadas en este sistema.</p></div>`;
  put(heading+loginForm(false,role));bindLogin(role);
  const recovery=$('#forgotPassword');if(recovery)recovery.onclick=showPasswordRecoveryRequest;
   const back=$('#backToRoles');if(back)back.onclick=()=>{state.selectedRole=null;location.hash='#/inicio';renderRoute()};
+}
+
+async function useRecoveryLink(raw){
+ const url=new URL(raw.trim());
+ if(!['http:','https:'].includes(url.protocol))throw Error('La dirección debe comenzar con http:// o https://');
+ const query=url.searchParams;
+ const fragment=new URLSearchParams(url.hash.replace(/^#/,''));
+ const type=query.get('type')||fragment.get('type');
+ if(type&&type!=='recovery')throw Error('Ese enlace no corresponde a una recuperación de contraseña.');
+ let result=null;
+ if(fragment.has('access_token')&&fragment.has('refresh_token')){
+  result=await api.auth.setSession({
+   access_token:fragment.get('access_token'),refresh_token:fragment.get('refresh_token')
+  });
+ }else if(query.has('token_hash')||query.has('token')){
+  const token_hash=query.get('token_hash')||query.get('token');
+  result=await api.auth.verifyOtp({type:'recovery',token_hash});
+ }else if(query.has('code')){
+  result=await api.auth.exchangeCodeForSession(query.get('code'));
+ }
+ if(!result)throw Error('No se encontró un código de recuperación en ese enlace. Copia la dirección completa que muestra localhost, incluido el texto después de #.');
+ if(result.error||!result.data?.user)throw Error('El enlace es inválido, está caducado o ya se utilizó.');
+ await completeInvitation(result.data.user);
 }
 function showPasswordRecoveryRequest(){
  if(!api){notify('Servicio de recuperación no disponible.');return}
  put(`<section class="panel login-panel">
   <div class="eyebrow">RECUPERACIÓN DE ACCESO</div><h1>Restablecer contraseña</h1>
-  <p>Recibirás un enlace para crear una contraseña nueva. No necesitas abrir Supabase.</p>
+  <p>Recibe un enlace de seguridad para establecer una nueva contraseña, sin entrar al panel de Supabase.</p>
   <form id="requestRecovery">
    <div class="field"><label class="label" for="recoveryEmail">Correo de tu cuenta</label>
     <input id="recoveryEmail" type="email" required autocomplete="email" placeholder="correo@ejemplo.com"></div>
    <button class="primary-btn btn-block" type="submit">Enviar enlace de recuperación</button>
    <p id="recoveryStatus" role="status"></p>
   </form>
+  <div class="message" style="margin-top:18px">
+   <strong>¿El correo te manda a localhost?</strong>
+   Copia la dirección completa que aparece en tu navegador (incluida la parte después del símbolo #), regresa aquí y pégala abajo. No necesitas abrir localhost.
+  </div>
+  <form id="importRecoveryLink" style="margin-top:14px">
+   <div class="field"><label class="label" for="recoveryLink">Pegar enlace recibido por correo</label>
+    <textarea id="recoveryLink" rows="3" spellcheck="false" autocomplete="off" required placeholder="http://localhost:3000/#access_token=...&type=recovery"></textarea></div>
+   <button class="outline-btn btn-block" type="submit">Continuar con mi enlace</button>
+   <p id="importRecoveryStatus" role="alert"></p>
+  </form>
+  <p class="helper">El enlace se procesa en tu navegador. No lo envíes a nadie ni lo compartas en mensajes.</p>
   <button id="backFromRecovery" type="button" class="outline-btn btn-block login-back">Volver al acceso</button>
  </section>`);
  $('#backFromRecovery').onclick=()=>showLogin(state.selectedRole||'admin');
  $('#requestRecovery').onsubmit=async event=>{
   event.preventDefault();
-  const btn=event.currentTarget.querySelector('button[type=submit]');btn.disabled=true;
+  const button=event.currentTarget.querySelector('button[type=submit]');button.disabled=true;
   try{
    const {error}=await api.auth.resetPasswordForEmail($('#recoveryEmail').value.trim(),{
-    redirectTo:location.origin+location.pathname+'?reset=1'
+    redirectTo:'https://tarjeton-digital-utn.galindoh-david.workers.dev/?reset=1'
    });
    if(error)throw error;
-   $('#recoveryStatus').textContent='Si el correo está registrado, recibirás un enlace para establecer tu contraseña.';
+   $('#recoveryStatus').textContent='Si la cuenta está registrada, recibirás un correo. Si el enlace abre localhost, cópialo y pégalo en el formulario de abajo.';
   }catch(error){
-   $('#recoveryStatus').textContent='No se pudo enviar la recuperación. Verifica el correo o inténtalo de nuevo.';
-  }finally{btn.disabled=false}
+   $('#recoveryStatus').textContent='No se pudo enviar la recuperación. Comprueba el correo o inténtalo de nuevo.';
+  }finally{button.disabled=false}
+ };
+ $('#importRecoveryLink').onsubmit=async event=>{
+  event.preventDefault();
+  const button=event.currentTarget.querySelector('button[type=submit]');button.disabled=true;
+  const raw=$('#recoveryLink').value;$('#recoveryLink').value='';
+  try{await useRecoveryLink(raw)}
+  catch(error){
+   const el=$('#importRecoveryStatus');
+   if(el)el.textContent=error?.message||'No se pudo verificar el enlace. Solicita uno nuevo.';
+   button.disabled=false;
+  }
  };
 }
 function bindLogin(role=state.selectedRole){
