@@ -1,5 +1,5 @@
 /* Solo almacena recursos públicos del mismo origen. */
-const CACHE = 'tarjeton-utn-shell-v4';
+const CACHE = 'tarjeton-utn-shell-v5';
 const SHELL = [
   './', './index.html', './styles.css', './app.js', './config.js', './vendor/qr.js',
   './vendor/dependencies.js', './manifest.webmanifest', './assets/logo-small.png',
