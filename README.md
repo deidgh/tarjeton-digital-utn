@@ -20,17 +20,11 @@ Utiliza exclusivamente el proyecto [tarjeton-digital-utn en Supabase](https://su
    <p><a href="{{ .SiteURL }}/?token_hash={{ .TokenHash }}&amp;type=invite">Activar mi cuenta</a></p>
    ```
 
-5. Crea la primera cuenta en **Authentication → Users → Add user → Create new user**, con correo autorizado y contraseña segura. Confirma el correo. En el **SQL Editor** copia el siguiente SQL y reemplaza los valores marcados con el nombre y el correo de esa cuenta.
+5. **Primer administrador:** abre [Authentication → Users](https://supabase.com/dashboard/project/fmemnxhzlqsmwhfynqfm/auth/users), elige **Add user → Invite user** y envía la invitación a `galindoh.david@gmail.com` (cuenta vinculada a Cloudflare). **No uses Create new user** para esta primera alta. La migración `20261123042100_bootstrap_first_admin.sql` crea automáticamente su perfil `admin` solo cuando Supabase Auth genera la invitación para ese correo; no admite registro público.
+6. Abre el correo de invitación, entra al enlace HTTPS del Tarjetón Digital UTN, establece una contraseña única de al menos 12 caracteres y luego ingresa por **Soy administrador**. La activación se completa en el teléfono o computadora del titular.
+7. Desde **Soy administrador** podrás invitar titulares y vigilantes, registrar permisos, subir fotografías, suspender tarjetones y revisar el historial. Para mantener cerrada el alta pública, desactiva **Allow new users to sign up** en Auth si todavía está activada.
 
-   ```sql
-   insert into public.profiles (id, email, full_name, role)
-   select id, email, 'NOMBRE DEL ADMINISTRADOR', 'admin'
-   from auth.users
-   where lower(email) = lower('CORREO DEL ADMINISTRADOR')
-   returning id, email, role;
-   ```
-
-   El resultado debe devolver una fila. Entra por **Soy administrador**. Desde allí se crean titulares y vigilantes por invitación y se cargan fotos desde **Usuarios** o al editar el tarjetón. Se puede asignar un permiso al crear una cuenta o posteriormente desde **Usuarios**.
+**Seguridad inicial:** el primer administrador debe confirmar el acceso a su correo. Ningún colaborador debe guardar su contraseña en el repositorio. Si ya existe un usuario Auth con ese correo sin haber sido invitado, la regla automática no se ejecutará; habrá que comprobar y asignar el rol desde SQL Editor con autorización expresa.
 
 ## Verificación
 
