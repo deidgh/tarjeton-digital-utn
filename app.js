@@ -586,7 +586,11 @@ async function activateInvitation(parameters){
  history.replaceState(null,'',location.pathname);
  const {data,error}=await api.auth.verifyOtp({token_hash:token,type:'invite'});
  if(error||!data.user){home();notify('La invitación es inválida o expiró. Contacta a administración.');return;}
- state.user=data.user;
+ await completeInvitation(data.user);
+}
+async function completeInvitation(user){
+ history.replaceState(null,'',location.pathname);
+ state.user=user;
  await fetchProfile();
  if(!state.profile?.active){await signOut();notify('La cuenta aún requiere autorización.');return;}
  put(`<section class="panel login-panel"><h1>Activa tu cuenta</h1><form id="activation">
@@ -612,6 +616,16 @@ async function activateInvitation(parameters){
   const parameters=new URLSearchParams(location.search);
   if(parameters.has('token_hash')&&parameters.get('type')==='invite'){
    await activateInvitation(parameters);
+   return;
+  }
+  // Supabase también puede redirigir invitaciones con tokens en el fragmento URL.
+  const fragment=new URLSearchParams((location.hash||'').replace(/^#/,''));
+  if(fragment.get('type')==='invite'&&fragment.has('access_token')&&fragment.has('refresh_token')){
+   const {data,error}=await api.auth.setSession({
+     access_token:fragment.get('access_token'),refresh_token:fragment.get('refresh_token')
+   });
+   if(error||!data.user){home();notify('La invitación caducó o no es válida.');return;}
+   await completeInvitation(data.user);
    return;
   }
   if(!navigator.onLine)notify('Conéctate a internet para validar tu sesión.');
