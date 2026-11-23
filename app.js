@@ -73,7 +73,7 @@ function chooseRole(role){
 function loginForm(inline=false,role=state.selectedRole){
  const spec=entryRoles.find(r=>r.id===role)||entryRoles[1];
  return `<section class="${inline?'':'login-panel'} panel login-entry"><div class="eyebrow">ACCESO AL SISTEMA · ${clean(roleName(spec.id))}</div><div class="login-role-head"><span class="login-role-symbol">${spec.symbol}</span><div><h2>${clean(spec.title)}</h2><p>${api?'Ingresa con las credenciales que te proporcionó la administración.':'Selecciona un perfil para continuar en el prototipo.'}</p></div></div>
- ${api?`<form id="loginForm"><div class="field"><label class="label" for="email">Correo electrónico</label><input id="email" type="email" autocomplete="username" placeholder="correo@ejemplo.com" required></div><div class="field"><label class="label" for="password">Contraseña</label><input id="password" type="password" autocomplete="current-password" required minlength="6"></div><button class="primary-btn btn-block" type="submit">Ingresar como ${clean(roleName(spec.id))}</button><div id="loginMessage" role="alert"></div></form>`:
+ ${api?`<form id="loginForm"><div class="field"><label class="label" for="email">Correo electrónico</label><input id="email" type="email" autocomplete="username" placeholder="correo@ejemplo.com" required></div><div class="field"><label class="label" for="password">Contraseña</label><input id="password" type="password" autocomplete="current-password" required minlength="6"></div><button class="primary-btn btn-block" type="submit">Ingresar como ${clean(roleName(spec.id))}</button><div id="loginMessage" role="alert"></div></form><button class="link-button" type="button" id="forgotPassword" style="margin-top:12px">¿Olvidaste tu contraseña?</button>`:
  `<div class="role-actions"><button type="button" data-role="${clean(spec.id)}">Entrar en modo demostración</button></div><div class="message warn">Modo de prueba sin autenticación. No ingreses datos personales.</div>`}
  ${inline?'':'<button type="button" id="backToRoles" class="outline-btn btn-block login-back">← Elegir otro perfil</button>'}
  </section>`
@@ -83,7 +83,36 @@ function showLogin(role=state.selectedRole){
  state.selectedRole=role;
  const heading=`<div class="page-heading login-heading"><div class="eyebrow">IDENTIFICACIÓN DE USUARIO</div><h1>Inicio de sesión</h1><p>El acceso está limitado a personas autorizadas por la universidad.</p></div>`;
  put(heading+loginForm(false,role));bindLogin(role);
- const back=$('#backToRoles');if(back)back.onclick=()=>{state.selectedRole=null;location.hash='#/inicio';renderRoute()};
+ const recovery=$('#forgotPassword');if(recovery)recovery.onclick=showPasswordRecoveryRequest;
+  const back=$('#backToRoles');if(back)back.onclick=()=>{state.selectedRole=null;location.hash='#/inicio';renderRoute()};
+}
+function showPasswordRecoveryRequest(){
+ if(!api){notify('Servicio de recuperación no disponible.');return}
+ put(`<section class="panel login-panel">
+  <div class="eyebrow">RECUPERACIÓN DE ACCESO</div><h1>Restablecer contraseña</h1>
+  <p>Recibirás un enlace para crear una contraseña nueva. No necesitas abrir Supabase.</p>
+  <form id="requestRecovery">
+   <div class="field"><label class="label" for="recoveryEmail">Correo de tu cuenta</label>
+    <input id="recoveryEmail" type="email" required autocomplete="email" placeholder="correo@ejemplo.com"></div>
+   <button class="primary-btn btn-block" type="submit">Enviar enlace de recuperación</button>
+   <p id="recoveryStatus" role="status"></p>
+  </form>
+  <button id="backFromRecovery" type="button" class="outline-btn btn-block login-back">Volver al acceso</button>
+ </section>`);
+ $('#backFromRecovery').onclick=()=>showLogin(state.selectedRole||'admin');
+ $('#requestRecovery').onsubmit=async event=>{
+  event.preventDefault();
+  const btn=event.currentTarget.querySelector('button[type=submit]');btn.disabled=true;
+  try{
+   const {error}=await api.auth.resetPasswordForEmail($('#recoveryEmail').value.trim(),{
+    redirectTo:location.origin+location.pathname+'?reset=1'
+   });
+   if(error)throw error;
+   $('#recoveryStatus').textContent='Si el correo está registrado, recibirás un enlace para establecer tu contraseña.';
+  }catch(error){
+   $('#recoveryStatus').textContent='No se pudo enviar la recuperación. Verifica el correo o inténtalo de nuevo.';
+  }finally{btn.disabled=false}
+ };
 }
 function bindLogin(role=state.selectedRole){
  const allowed=entryRoles.find(r=>r.id===role)?.id||'guard';
