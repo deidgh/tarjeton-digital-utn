@@ -622,7 +622,7 @@ async function completeInvitation(user){
  state.user=user;
  await fetchProfile();
  if(!state.profile?.active){await signOut();notify('La cuenta aún requiere autorización.');return;}
- put(`<section class="panel login-panel"><h1>Activa tu cuenta</h1><form id="activation">
+ put(`<section class="panel login-panel"><h1>Establece tu contraseña</h1><form id="activation">
   <div class="field"><label class="label" for="newPassword">Crea una contraseña de al menos 12 caracteres</label>
   <input id="newPassword" type="password" autocomplete="new-password" minlength="12" required></div>
   <button class="primary-btn">Guardar contraseña</button><p id="activationStatus" role="alert"></p></form></section>`);
@@ -643,6 +643,32 @@ async function completeInvitation(user){
    auth:{storageKey:'tarjeton-utn-auth',detectSessionInUrl:false},
   });
   const parameters=new URLSearchParams(location.search);
+  // Recuperación con el enlace firmado por Supabase Auth.
+  const recoveryParams=new URLSearchParams((location.hash||'').replace(/^#/,''));
+  const isRecovery=(parameters.get('type')==='recovery'&&parameters.has('token_hash'))
+    || (recoveryParams.get('type')==='recovery'&&recoveryParams.has('access_token')&&recoveryParams.has('refresh_token'))
+    || (parameters.get('reset')==='1'&&parameters.has('code'));
+  if(isRecovery){
+   try{
+    let data,error;
+    if(parameters.has('token_hash')){
+     ({data,error}=await api.auth.verifyOtp({token_hash:parameters.get('token_hash'),type:'recovery'}));
+    }else if(parameters.has('code')){
+     ({data,error}=await api.auth.exchangeCodeForSession(parameters.get('code')));
+    }else{
+     ({data,error}=await api.auth.setSession({
+      access_token:recoveryParams.get('access_token'),
+      refresh_token:recoveryParams.get('refresh_token')
+     }));
+    }
+    if(error||!data?.user)throw new Error('Enlace inválido');
+    await completeInvitation(data.user);
+   }catch(error){
+    history.replaceState(null,'',location.pathname+'#/inicio');
+    home();notify('Enlace de recuperación caducado o inválido. Solicita uno nuevo.');
+   }
+   return;
+  }
   if(parameters.has('token_hash')&&parameters.get('type')==='invite'){
    await activateInvitation(parameters);
    return;
