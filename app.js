@@ -542,7 +542,14 @@ async function adminPanel(){
      </select><button class="outline-btn btn-sm" data-edit-permit="${clean(permit.id)}">Editar</button></div></td></tr>`;
    }).join('')}</tbody></table></div>`:'<p>Aún no hay tarjetones registrados.</p>'}`;
  }else if(tab==='usuarios'){
-  body=`<h2>Usuarios autorizados</h2><div class="table-scroll"><table class="records">
+  body=`<h2>Usuarios autorizados</h2>
+    <div class="message" style="margin:16px 0">
+      <strong>Cuentas de prueba</strong>
+      <p>Genera tres cuentas ficticias: un vigilante y dos titulares con permisos DEMO. Las contraseñas se mostrarán una sola vez; guárdalas antes de salir de esta pantalla.</p>
+      <button class="outline-btn" id="createDemoUsers" type="button">Crear tres usuarios de prueba</button>
+      <div id="demoCreatedUsers" role="status" style="margin-top:12px"></div>
+    </div>
+    <div class="table-scroll"><table class="records">
    <thead><tr><th>Nombre</th><th>Correo</th><th>Perfil</th><th>Cuenta</th><th>Acciones</th></tr></thead>
    <tbody>${profiles.map(profile=>`<tr><td>${clean(profile.full_name)}</td><td>${clean(profile.email)}</td>
    <td>${roleName(profile.role)}</td><td>${profile.active?'Habilitada':'Deshabilitada'}</td>
@@ -570,6 +577,49 @@ async function adminPanel(){
   <section class="panel">${body}</section><div id="adminEditor"></div>`);
  wireSession();
  document.querySelectorAll('[data-tab]').forEach(button=>button.onclick=()=>{state.tab=button.dataset.tab;adminPanel();});
+  const createDemoButton=$('#createDemoUsers');
+  if(createDemoButton)createDemoButton.onclick=async()=>{
+    createDemoButton.disabled=true;
+    const output=$('#demoCreatedUsers');
+    output.textContent='Registrando usuarios de prueba...';
+    try{
+      const response=await invoke('admin-create-demo-users',{});
+      const accounts=response.accounts||[];
+      const created=accounts.filter(a=>a.created&&a.password);
+      const already=accounts.filter(a=>a.already_exists);
+      const failed=accounts.filter(a=>a.error);
+      output.innerHTML='';
+      if(created.length){
+        const lead=document.createElement('p');
+        lead.textContent=created.length+' cuenta(s) creada(s). Copia ahora estas credenciales, porque no volverán a mostrarse.';
+        output.append(lead);
+        const pre=document.createElement('pre');
+        pre.style.cssText='white-space:pre-wrap;overflow-wrap:anywhere;padding:12px;border:1px solid #adb8b4;border-radius:8px;user-select:text';
+        const lines=created.map(a=>[a.full_name+' ('+(a.role==='guard'?'Vigilante':'Acceso')+')','Correo: '+a.email,'Contraseña: '+a.password,a.folio?'Tarjetón: '+a.folio:''].filter(Boolean).join('\n')).join('\n\n');
+        pre.textContent=lines;
+        output.append(pre);
+        const copyButton=document.createElement('button');
+        copyButton.type='button';copyButton.className='outline-btn';
+        copyButton.textContent='Copiar credenciales';
+        copyButton.onclick=async()=>{try{await navigator.clipboard.writeText(lines);notify('Credenciales copiadas.')}catch{notify('Selecciona el texto y cópialo manualmente.')}};
+        output.append(copyButton);
+      }
+      if(already.length){
+        const p=document.createElement('p');
+        p.textContent='Ya existentes: '+already.map(a=>a.email).join(', ')+'. Sus contraseñas anteriores no pueden volver a mostrarse.';
+        output.append(p);
+      }
+      if(failed.length){
+        const p=document.createElement('p');
+        p.textContent='Sin completar: '+failed.map(a=>a.email+' ('+a.error+')').join(', ');
+        output.append(p);
+      }
+      if(!accounts.length)output.textContent='No se recibieron resultados.';
+    }catch(e){
+      output.textContent='No se pudieron crear las cuentas. '+(e.message||'Comprueba tu sesión.');
+    }finally{createDemoButton.disabled=false}
+  };
+
  document.querySelectorAll('[data-edit-permit]').forEach(button=>button.onclick=()=>{
   const permit=records.find(item=>item.id===button.dataset.editPermit);
   renderPermitEditor(permit,owners.get(permit.owner_id)||permit);
